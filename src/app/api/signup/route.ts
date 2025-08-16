@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Set session cookie
     (await cookies()).set(
       "session",
-      sessionResult.session.$id,
+      sessionResult.session.secret,
       cookieSettinigs as object
     );
 

@@ -1,9 +1,9 @@
-import { account, users } from './config';
+import { adminAccount, sessionAccount, users } from './config';
 import { ID } from 'node-appwrite';
 
 export async function createUserSession(email: string, password: string) {
   try {
-    const session = await account.createEmailPasswordSession(email, password);
+    const session = await adminAccount.createEmailPasswordSession(email, password);
     return { success: true, session };
   } catch (error) {
     return {
@@ -43,8 +43,8 @@ export async function createUser(
 
 export async function getCurrentUser(sessionId: string) {
   try {
-    account.client.setSession(sessionId);
-    const user = await account.get();
+    sessionAccount.client.setSession(sessionId);
+    const user = await sessionAccount.get();
     return { success: true, user };
   } catch (error) {
     return {
@@ -59,8 +59,8 @@ export async function getCurrentUser(sessionId: string) {
 
 export async function deleteCurrentSession(sessionId: string) {
   try {
-    account.client.setSession(sessionId);
-    await account.deleteSession("current");
+    sessionAccount.client.setSession(sessionId);
+    await sessionAccount.deleteSession("current");
     return { success: true };
   } catch (error) {
     return {

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Set session cookie
     (await cookies()).set(
       "session",
-      result.session.$id,
+      result.session.secret,
       cookieSettinigs as object
     );
 

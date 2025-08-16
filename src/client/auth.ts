@@ -1,6 +1,15 @@
 interface AuthResponse {
   success: boolean;
-  data?: any;
+  data?: {
+    message?: string;
+    session?: {
+      $id: string;
+      $createdAt: string;
+      $updatedAt: string;
+      userId: string;
+      expire: string;
+    };
+  };
   error?: string;
 }
 
@@ -17,7 +26,6 @@ export async function registerUser(
     });
 
     if (!response.ok) {
-      // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
@@ -47,7 +55,6 @@ export async function loginUser(
     });
 
     if (!response.ok) {
-      // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
@@ -58,7 +65,6 @@ export async function loginUser(
     }
 
     const data = await response.json();
-    console.log(data);
     return { success: true, data };
   } catch (error) {
     console.error(error);
