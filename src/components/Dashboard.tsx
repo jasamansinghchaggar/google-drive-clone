@@ -1,29 +1,22 @@
 'use client'
 
 import React, { useEffect } from 'react';
-import { Button } from './ui/button';
-import { logoutUser } from '@/client/auth';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardSkeleton } from './ui/dashboard-skeleton';
+import Navbar from './Navbar';
+import Sidebar from './Sidebar';
+import MainContent from './MainContent';
 
 const Dashboard: React.FC = () => {
     const router = useRouter();
-    const { user, loading, refetchUser } = useAuth();
+    const { user, loading } = useAuth();
 
     useEffect(() => {
         if (!loading && !user) {
             router.push('/signin');
         }
     }, [loading, user, router]);
-
-    const handleLogout = async () => {
-        const result = await logoutUser();
-        if (result.success) {
-            await refetchUser();
-            router.push('/signin');
-        }
-    };
 
     if (loading) {
         return (
@@ -36,18 +29,20 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen w-screen">
-            <div className="">
-                <h1 className="">Dashboard</h1>
-                <p className="">Welcome, {user.name || user.email}!</p>
+        <div className="h-screen flex flex-col bg-background">
+            {/* Navbar */}
+            <Navbar user={user} />
+            
+            {/* Main Layout */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar - Hidden on mobile */}
+                <div className="hidden md:block">
+                    <Sidebar userId={user.$id} />
+                </div>
+                
+                {/* Main Content */}
+                <MainContent user={user} />
             </div>
-
-            <div className="mt-8">
-                <Button onClick={handleLogout} variant="outline">
-                    Logout
-                </Button>
-            </div>
-
         </div>
     );
 };

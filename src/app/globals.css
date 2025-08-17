@@ -41,6 +41,18 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Custom app colors */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-file-documents: var(--file-documents);
+  --color-file-images: var(--file-images);
+  --color-file-videos: var(--file-videos);
+  --color-file-folders: var(--file-folders);
 }
 
 :root {
@@ -76,6 +88,18 @@
   --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
   --sidebar-border: oklch(0.928 0.006 264.531);
   --sidebar-ring: oklch(0.707 0.022 261.325);
+  
+  /* Custom app colors */
+  --brand: oklch(0.5 0.2 240); /* Blue for brand/primary actions */
+  --brand-foreground: oklch(1 0 0);
+  --brand-muted: oklch(0.95 0.02 240);
+  --success: oklch(0.6 0.15 140); /* Green for success states */
+  --warning: oklch(0.7 0.15 60); /* Orange for warnings */
+  --info: oklch(0.6 0.15 200); /* Blue for info */
+  --file-documents: oklch(0.5 0.2 240); /* Blue for documents */
+  --file-images: oklch(0.6 0.15 140); /* Green for images */
+  --file-videos: oklch(0.6 0.15 280); /* Purple for videos */
+  --file-folders: oklch(0.7 0.15 50); /* Orange for folders */
 }
 
 .dark {
@@ -110,6 +134,18 @@
   --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  
+  /* Custom app colors for dark mode */
+  --brand: oklch(0.6 0.2 240);
+  --brand-foreground: oklch(1 0 0);
+  --brand-muted: oklch(0.2 0.02 240);
+  --success: oklch(0.7 0.15 140);
+  --warning: oklch(0.8 0.15 60);
+  --info: oklch(0.7 0.15 200);
+  --file-documents: oklch(0.6 0.2 240);
+  --file-images: oklch(0.7 0.15 140);
+  --file-videos: oklch(0.7 0.15 280);
+  --file-folders: oklch(0.8 0.15 50);
 }
 
 @layer base {
