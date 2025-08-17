@@ -1,5 +1,5 @@
 import { adminAccount, sessionAccount, users } from './config';
-import { ID } from 'node-appwrite';
+import { ID, OAuthProvider } from 'node-appwrite';
 
 export async function createUserSession(email: string, password: string) {
   try {
@@ -53,6 +53,25 @@ export async function getCurrentUser(sessionId: string) {
         error instanceof Error
           ? error.message
           : "An error occurred while getting the user",
+    };
+  }
+}
+
+export async function createGoogleOAuthSession(successUrl: string, failureUrl: string) {
+  try {
+    const redirectUrl = await adminAccount.createOAuth2Token(
+      OAuthProvider.Google,
+      successUrl,
+      failureUrl
+    );
+    return { success: true, redirectUrl };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "An error occurred while creating Google OAuth session",
     };
   }
 }

@@ -1,3 +1,5 @@
+import type { Models } from "appwrite";
+
 interface AuthResponse {
   success: boolean;
   data?: {
@@ -9,6 +11,10 @@ interface AuthResponse {
       userId: string;
       expire: string;
     };
+    user?: Models.User<Models.Preferences>; // Appwrite user object
+    $id?: string;
+    email?: string;
+    name?: string;
   };
   error?: string;
 }
@@ -74,33 +80,38 @@ export async function loginUser(
 
 export async function logoutUser(): Promise<AuthResponse> {
   try {
-    const response = await fetch("/api/signout", {
-      method: "POST",
-    });
-
-    if (!response.ok) {
-      return { success: false, error: "Logout failed" };
-    }
-
+    const { account } = await import("@/lib/appwrite");
+    await account.deleteSession("current");
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { success: false, error: "Network error" };
+    return { success: false, error: "Logout failed" };
   }
 }
 
 export async function getCurrentUser(): Promise<AuthResponse> {
   try {
-    const response = await fetch("/api/profile");
-    const data = await response.json();
+    const { account } = await import("@/lib/appwrite");
+    const user = await account.get();
+    return { success: true, data: { user } };
+  } catch {
+    return { success: false, error: "No active session" };
+  }
+}
 
-    if (!response.ok) {
-      return { success: false, error: data.error };
-    }
+export async function initiateGoogleAuth(): Promise<void> {
+  try {
+    const { account, OAuthProvider } = await import("@/lib/appwrite");
 
-    return { success: true, data: data.user };
+    const origin = window.location.origin;
+
+    await account.createOAuth2Session(
+      OAuthProvider.Google,
+      `${origin}/auth/oauth-success`,
+      `${origin}/signin?error=oauth_failed`
+    );
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Network error" };
+    console.error("Failed to initiate Google authentication:", error);
+    throw new Error("Failed to initiate Google authentication");
   }
 }
