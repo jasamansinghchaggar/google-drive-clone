@@ -18,7 +18,7 @@ class FileService {
       const { account } = await import('@/lib/appwrite');
       await account.get(); // This will throw if not authenticated
     } catch {
-      throw new Error('User not authenticated. Please sign in again.');
+      throw new Error('Please sign in to continue. Your session may have expired.');
     }
   }
 
@@ -48,6 +48,28 @@ class FileService {
     } catch (error) {
       console.error('Error fetching user files:', error);
       throw new Error('Failed to fetch files');
+    }
+  }
+
+  // Get all folders for a user (for move functionality)
+  async getAllFolders(userId: string): Promise<FileItem[]> {
+    try {
+      await this.ensureAuthenticated();
+      
+      const response = await this.databases.listDocuments(
+        APPWRITE_CONFIG.DATABASE_ID,
+        APPWRITE_CONFIG.FILES_COLLECTION_ID,
+        [
+          Query.equal('userId', userId),
+          Query.equal('type', 'folder'),
+          Query.orderAsc('name')
+        ]
+      );
+
+      return response.documents as unknown as FileItem[];
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      throw new Error('Failed to fetch folders');
     }
   }
 
@@ -150,13 +172,13 @@ class FileService {
 
       // Check file size
       if (file.size > APPWRITE_CONFIG.MAX_FILE_SIZE) {
-        throw new Error(`File size exceeds maximum limit of ${APPWRITE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`);
+        throw new Error(`File "${file.name}" is too large. Maximum file size is ${APPWRITE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB.`);
       }
 
       // Check total storage usage
       const stats = await this.getStorageStats(userId);
       if (stats.totalSize + file.size > APPWRITE_CONFIG.MAX_TOTAL_STORAGE) {
-        throw new Error('Storage limit exceeded');
+        throw new Error(`Storage limit exceeded. You have ${((APPWRITE_CONFIG.MAX_TOTAL_STORAGE - stats.totalSize) / (1024 * 1024)).toFixed(1)}MB remaining.`);
       }
 
       // Upload to storage - Don't specify permissions, let bucket permissions handle it
@@ -230,9 +252,30 @@ class FileService {
     }
   }
 
-  // Get file download URL
-  getFilePreview(bucketFileId: string): string {
-    return this.storage.getFilePreview(
+  // Move a file or folder to a different parent
+  async moveFile(fileId: string, newParentId?: string): Promise<FileItem> {
+    try {
+      await this.ensureAuthenticated();
+      
+      const response = await this.databases.updateDocument(
+        APPWRITE_CONFIG.DATABASE_ID,
+        APPWRITE_CONFIG.FILES_COLLECTION_ID,
+        fileId,
+        {
+          parentId: newParentId || null
+        }
+      );
+
+      return response as unknown as FileItem;
+    } catch (error) {
+      console.error('Error moving file:', error);
+      throw new Error('Failed to move file');
+    }
+  }
+
+  // Get file view URL (for opening in browser without download)
+  getFileView(bucketFileId: string): string {
+    return this.storage.getFileView(
       APPWRITE_CONFIG.STORAGE_BUCKET_ID,
       bucketFileId
     ).toString();

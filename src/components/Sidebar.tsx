@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
@@ -18,6 +20,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ className, userId }) => {
   const { stats } = useStorageStats(userId || '');
+  const pathname = usePathname();
   
   // Calculate storage usage
   const usedStorage = stats ? stats.totalSize : 0;
@@ -33,13 +36,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className, userId }) => {
       icon: Home,
       label: 'Home',
       href: '/dashboard',
-      active: true,
     },
     {
       icon: FolderOpen,
       label: 'My Files',
-      href: '/dashboard/files',
-      active: false,
+      href: '/files',
     },
   ];
 
@@ -60,23 +61,26 @@ const Sidebar: React.FC<SidebarProps> = ({ className, userId }) => {
       {/* Navigation Menu */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.label}>
-              <Button
-                variant={item.active ? 'secondary' : 'ghost'}
-                className={cn(
-                  'w-full justify-start',
-                  item.active && 'bg-accent text-accent-foreground'
-                )}
-                asChild
-              >
-                <a href={item.href}>
-                  <item.icon className="mr-3 h-4 w-4" />
-                  {item.label}
-                </a>
-              </Button>
-            </li>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <li key={item.label}>
+                <Button
+                  variant={isActive ? 'secondary' : 'ghost'}
+                  className={cn(
+                    'w-full justify-start',
+                    isActive && 'bg-accent text-accent-foreground'
+                  )}
+                  asChild
+                >
+                  <Link href={item.href}>
+                    <item.icon className="mr-3 h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

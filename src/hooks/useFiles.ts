@@ -86,6 +86,34 @@ export const useStorageStats = (userId: string) => {
   return { stats, loading, error, refetch: fetchStats };
 };
 
+// Hook for fetching all folders (for move functionality)
+export const useAllFolders = (userId: string) => {
+  const [folders, setFolders] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFolders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const allFolders = await fileService.getAllFolders(userId);
+      setFolders(allFolders);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch folders');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchFolders();
+    }
+  }, [userId, fetchFolders]);
+
+  return { folders, loading, error, refetch: fetchFolders };
+};
+
 // Hook for file upload
 export const useFileUpload = () => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
@@ -170,4 +198,70 @@ export const useCreateFolder = () => {
   };
 
   return { createFolder, loading, error };
+};
+
+// Hook for file operations (delete, open)
+export const useFileOperations = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteFile = async (fileId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await fileService.deleteFile(fileId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete file';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openFile = (file: FileItem) => {
+    if (file.type === 'folder') {
+      // For folders, we would navigate to that folder
+      // This will be handled by the component
+      return;
+    }
+
+    if (file.bucketFileId) {
+      // For files, get the view URL and open in new tab (doesn't trigger download)
+      const viewUrl = fileService.getFileView(file.bucketFileId);
+      window.open(viewUrl, '_blank');
+    }
+  };
+
+  const moveFile = async (fileId: string, newParentId?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await fileService.moveFile(fileId, newParentId);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to move file';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFileViewUrl = (bucketFileId: string) => {
+    return fileService.getFileView(bucketFileId);
+  };
+
+  const getFileDownloadUrl = (bucketFileId: string) => {
+    return fileService.getFileDownload(bucketFileId);
+  };
+
+  return {
+    deleteFile,
+    moveFile,
+    openFile,
+    getFileViewUrl,
+    getFileDownloadUrl,
+    loading,
+    error
+  };
 };

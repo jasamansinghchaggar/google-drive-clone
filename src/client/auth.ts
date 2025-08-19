@@ -115,3 +115,32 @@ export async function initiateGoogleAuth(): Promise<void> {
     throw new Error("Failed to initiate Google authentication");
   }
 }
+
+export async function updateUserProfile(
+  name?: string,
+  password?: string
+): Promise<AuthResponse> {
+  try {
+    const response = await fetch("/api/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, password }),
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        return { success: false, error: data.error || "Profile update failed" };
+      } else {
+        return { success: false, error: "Server error" };
+      }
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Network error" };
+  }
+}

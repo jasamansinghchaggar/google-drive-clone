@@ -6,13 +6,13 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/ui/google-signin-button";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,8 +59,8 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="w-full max-w-sm mx-auto p-6">
-            <Card>
+        <div className="w-full max-w-sm p-6">
+            <Card className='border-0 shadow-none'>
                 <CardHeader>
                     <CardTitle>Create Account</CardTitle>
                     <CardDescription>
@@ -146,8 +146,8 @@ export default function SignupPage() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex-col gap-2">
-                    <Button 
-                        type="submit" 
+                    <Button
+                        type="submit"
                         className="w-full"
                         disabled={loading}
                         onClick={handleSubmit}

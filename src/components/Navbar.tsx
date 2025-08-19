@@ -14,12 +14,14 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
 import { logoutUser } from '@/client/auth';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, Settings, LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 
 interface NavbarProps {
@@ -62,6 +64,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation Menu</SheetTitle>
+              </SheetHeader>
               <Sidebar className="border-r-0" userId={user.$id} />
             </SheetContent>
           </Sheet>
@@ -78,30 +83,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             </h1>
           </div>
         </div>
-          
-        {/* Search Bar - Hidden on mobile */}
-        <div className="flex-1 max-w-2xl mx-8 hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search in Drive"
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground"
-            />
-          </div>
-        </div>
 
         {/* User Menu */}
-        <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Search button for mobile */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Search className="h-5 w-5" />
-          </Button>
-          
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Settings className="h-5 w-5" />
-          </Button>
-          
+        <div className="flex items-center space-x-2 md:space-x-4">          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -125,13 +109,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/profile')}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">

@@ -2,6 +2,8 @@ import SignupPage from '@/components/SignupPage';
 
 export default function page() {
     return (
-        <SignupPage />
+        <div className='h-screen flex justify-center items-center'>
+            <SignupPage />
+        </div>
     );
 }

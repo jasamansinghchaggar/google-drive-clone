@@ -10,7 +10,9 @@ function SigninPageWithSuspense() {
                 </div>
             </div>
         }>
-            <SigninPage />
+            <div className='h-screen flex justify-center items-center'>
+                <SigninPage />
+            </div>
         </Suspense>
     );
 }

@@ -91,3 +91,32 @@ export async function deleteCurrentSession(sessionId: string) {
     };
   }
 }
+
+export async function updateUserProfile(sessionId: string, name?: string, password?: string) {
+  try {
+    sessionAccount.client.setSession(sessionId);
+    
+    // Update name if provided
+    if (name) {
+      await sessionAccount.updateName(name);
+    }
+    
+    // Update password if provided
+    if (password) {
+      await sessionAccount.updatePassword(password);
+    }
+    
+    // Get the updated user info
+    const user = await sessionAccount.get();
+    
+    return { success: true, user };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "An error occurred while updating profile",
+    };
+  }
+}

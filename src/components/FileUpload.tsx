@@ -11,14 +11,18 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
-import { Upload, File, X, CheckCircle } from 'lucide-react';
+import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatFileSize } from '@/utils/fileUtils';
+import { toast } from 'sonner';
+import { APPWRITE_CONFIG } from '@/config/appwrite';
 
 interface FileUploadProps {
   children: React.ReactNode;
   onUploadComplete?: () => void;
+  parentId?: string;
+  existingFiles?: { name: string }[];
 }
 
 interface UploadFile {
@@ -28,7 +32,7 @@ interface UploadFile {
   id: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete, parentId, existingFiles = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -40,7 +44,80 @@ const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete }) =
     if (!files || !user) return;
 
     const fileArray = Array.from(files);
-    const newFiles: UploadFile[] = fileArray.map(file => ({
+    
+    // Validate files before proceeding
+    const validFiles: File[] = [];
+    const rejectedFiles: { file: File; reason: string }[] = [];
+
+    fileArray.forEach(file => {
+      // Check file size
+      if (file.size > APPWRITE_CONFIG.MAX_FILE_SIZE) {
+        rejectedFiles.push({
+          file,
+          reason: `File size (${formatFileSize(file.size)}) exceeds maximum limit of ${formatFileSize(APPWRITE_CONFIG.MAX_FILE_SIZE)}`
+        });
+        return;
+      }
+
+      // Check if file is too small (0 bytes)
+      if (file.size === 0) {
+        rejectedFiles.push({
+          file,
+          reason: 'File is empty (0 bytes)'
+        });
+        return;
+      }
+
+      // Check file name length
+      if (file.name.length > 255) {
+        rejectedFiles.push({
+          file,
+          reason: 'File name is too long (maximum 255 characters)'
+        });
+        return;
+      }
+
+      // Check for invalid characters in filename
+      const invalidChars = /[<>:"/\\|?*]/;
+      if (invalidChars.test(file.name)) {
+        rejectedFiles.push({
+          file,
+          reason: 'File name contains invalid characters (< > : " / \\ | ? *)'
+        });
+        return;
+      }
+
+      // Check for duplicate file names
+      const duplicateFile = existingFiles.find(existingFile => 
+        existingFile.name.toLowerCase() === file.name.toLowerCase()
+      );
+      if (duplicateFile) {
+        rejectedFiles.push({
+          file,
+          reason: 'A file with this name already exists'
+        });
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    // Show error messages for rejected files
+    rejectedFiles.forEach(({ file, reason }) => {
+      toast.error(`Cannot upload "${file.name}": ${reason}`);
+    });
+
+    // If no valid files, return early
+    if (validFiles.length === 0) {
+      return;
+    }
+
+    // Show warning if some files were rejected
+    if (rejectedFiles.length > 0) {
+      toast.warning(`${rejectedFiles.length} file${rejectedFiles.length > 1 ? 's' : ''} could not be uploaded due to validation errors.`);
+    }
+
+    const newFiles: UploadFile[] = validFiles.map(file => ({
       file,
       progress: 0,
       status: 'uploading' as const,
@@ -50,33 +127,52 @@ const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete }) =
     setFileList(prev => [...prev, ...newFiles]);
 
     // Use the real upload service
-    uploadRealFiles(fileArray);
+    uploadRealFiles(validFiles);
   };
 
   const uploadRealFiles = async (files: File[]) => {
     if (!user) return;
 
     try {
-      await uploadFiles(files, user.$id);
+      const results = await uploadFiles(files, user.$id, parentId);
       
-      // Update status based on results
-      setFileList(prev => prev.map(uploadFile => {
-        const fileIndex = files.findIndex(f => f.name === uploadFile.file.name);
-        if (fileIndex !== -1) {
-          return {
-            ...uploadFile,
-            progress: 100,
-            status: 'completed' as const
-          };
+      // Check results for individual file errors
+      let hasErrors = false;
+      
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          hasErrors = true;
+          const errorMessage = result.reason instanceof Error ? result.reason.message : 'Upload failed';
+          toast.error(`Failed to upload ${files[index].name}: ${errorMessage}`);
+          
+          // Update file status to error
+          setFileList(prev => prev.map(f => 
+            f.file.name === files[index].name 
+              ? { ...f, status: 'error' as const }
+              : f
+          ));
+        } else {
+          // Update file status to completed
+          setFileList(prev => prev.map(f => 
+            f.file.name === files[index].name 
+              ? { ...f, progress: 100, status: 'completed' as const }
+              : f
+          ));
         }
-        return uploadFile;
-      }));
+      });
+
+      if (!hasErrors) {
+        toast.success(`Successfully uploaded ${files.length} file${files.length > 1 ? 's' : ''}`);
+      }
 
       if (onUploadComplete) {
         onUploadComplete();
       }
     } catch (error) {
       console.error('Upload failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      toast.error(`Upload failed: ${errorMessage}`);
+      
       setFileList(prev => prev.map(uploadFile => ({
         ...uploadFile,
         status: 'error' as const
@@ -154,7 +250,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete }) =
             <div className="space-y-3 max-h-64 overflow-y-auto">
               <h4 className="text-sm font-medium">Uploading Files</h4>
               {fileList.map((uploadFile) => (
-                <div key={uploadFile.id} className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
+                <div key={uploadFile.id} className={`flex items-center space-x-3 p-3 rounded-lg ${
+                  uploadFile.status === 'error' ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted'
+                }`}>
                   <File className="h-8 w-8 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
@@ -166,10 +264,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ children, onUploadComplete }) =
                     {uploadFile.status === 'uploading' && (
                       <Progress value={uploadFile.progress} className="mt-1 h-1" />
                     )}
+                    {uploadFile.status === 'error' && (
+                      <p className="text-xs text-destructive mt-1">Upload failed</p>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     {uploadFile.status === 'completed' && (
-                      <CheckCircle className="h-5 w-5 text-success" />
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    )}
+                    {uploadFile.status === 'error' && (
+                      <AlertCircle className="h-5 w-5 text-destructive" />
                     )}
                     <Button
                       variant="ghost"

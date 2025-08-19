@@ -78,8 +78,8 @@ export default function SigninPage() {
     };
 
     return (
-        <div className="w-full max-w-sm mx-auto p-6">
-            <Card>
+        <div className="w-full max-w-sm p-6">
+            <Card className='border-0 shadow-none'>
                 <CardHeader>
                     <CardTitle>Sign In</CardTitle>
                     <CardDescription>

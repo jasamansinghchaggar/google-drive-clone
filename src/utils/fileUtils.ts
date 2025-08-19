@@ -51,6 +51,18 @@ export const getFileIcon = (mimeType?: string, isFolder?: boolean) => {
   }
 };
 
+export const formatFullDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+};
+
 export const getFileExtension = (filename: string): string => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 };
