@@ -29,8 +29,6 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const router = useRouter();
     const { refetchUser } = useAuth();
-    const { refetchUser } = useAuth();
-    const { refetchUser } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
