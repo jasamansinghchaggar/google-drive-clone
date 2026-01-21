@@ -25,27 +25,32 @@ export async function registerUser(
   name?: string
 ): Promise<AuthResponse> {
   try {
-    const response = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        return { success: false, error: data.error || "Registration failed" };
-      } else {
-        return { success: false, error: "Server error" };
-      }
-    }
-
-    const data = await response.json();
-    return { success: true, data };
+    const { account } = await import("@/lib/appwrite");
+    const { ID } = await import("appwrite");
+    
+    // Create user account
+    await account.create(ID.unique(), email, password, name);
+    
+    // Create session (this automatically sets the a_session_<PROJECT_ID> cookie)
+    const session = await account.createEmailPasswordSession(email, password);
+    
+    // Get user details
+    const user = await account.get();
+    
+    return { 
+      success: true, 
+      data: { 
+        session: session as any,
+        user,
+        message: "Registration successful" 
+      } 
+    };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Network error" };
+    console.error("Registration error:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Registration failed" 
+    };
   }
 }
 
@@ -54,38 +59,45 @@ export async function loginUser(
   password: string
 ): Promise<AuthResponse> {
   try {
-    const response = await fetch("/api/signin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        return { success: false, error: data.error || "Login failed" };
-      } else {
-        return { success: false, error: "Server error" };
-      }
-    }
-
-    const data = await response.json();
-    return { success: true, data };
+    const { account } = await import("@/lib/appwrite");
+    
+    // Create session (this automatically sets the a_session_<PROJECT_ID> cookie)
+    const session = await account.createEmailPasswordSession(email, password);
+    
+    // Get user details
+    const user = await account.get();
+    
+    return { 
+      success: true, 
+      data: { 
+        session: session as any,
+        user,
+        message: "Login successful" 
+      } 
+    };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Network error" };
+    console.error("Login error:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Login failed" 
+    };
   }
 }
 
 export async function logoutUser(): Promise<AuthResponse> {
   try {
     const { account } = await import("@/lib/appwrite");
+    
+    // Delete current session (this automatically removes the cookie)
     await account.deleteSession("current");
-    return { success: true };
+    
+    return { success: true, data: { message: "Logout successful" } };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Logout failed" };
+    console.error("Logout error:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Logout failed" 
+    };
   }
 }
 

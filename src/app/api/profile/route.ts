@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/server/auth";
 import { cookies } from "next/headers";
 
+// Helper to get session cookie name
+const getSessionCookieName = () => {
+  return `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+};
+
 export async function GET() {
   try {
-    const sessionCookie = (await cookies()).get("session");
+    const sessionCookie = (await cookies()).get(getSessionCookieName());
 
     if (!sessionCookie) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -24,7 +29,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const sessionCookie = (await cookies()).get("session");
+    const sessionCookie = (await cookies()).get(getSessionCookieName());
 
     if (!sessionCookie) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { registerUser } from '@/client/auth';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/ui/google-signin-button";
@@ -27,6 +28,9 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
+    const { refetchUser } = useAuth();
+    const { refetchUser } = useAuth();
+    const { refetchUser } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,8 +53,9 @@ export default function SignupPage() {
         const result = await registerUser(email, password, name);
 
         if (result.success) {
-            router.push('/signin');
-            router.refresh();
+            // Refetch user to update AuthContext, then navigate to dashboard
+            await refetchUser();
+            router.push('/dashboard');
         } else {
             setError(result.error || 'Registration failed');
         }

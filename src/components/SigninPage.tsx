@@ -27,7 +27,7 @@ export default function SigninPage() {
     const [error, setError] = useState('');
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, refetchUser } = useAuth();
 
     useEffect(() => {
         // Redirect to dashboard if already authenticated
@@ -68,8 +68,9 @@ export default function SigninPage() {
         const result = await loginUser(email, password);
 
         if (result.success) {
+            // Refetch user to update AuthContext before navigating
+            await refetchUser();
             router.push('/dashboard');
-            router.refresh();
         } else {
             setError(result.error || 'Login failed');
         }

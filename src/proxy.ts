@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const hasSession = request.cookies.get('a_session_' + process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
+export function proxy(request: NextRequest) {
+  // Check for Appwrite's session cookie
+  const sessionCookieName = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+  const hasSession = request.cookies.get(sessionCookieName);
   
+  // Redirect authenticated users away from auth pages
   if (request.nextUrl.pathname.startsWith('/signin') || 
       request.nextUrl.pathname.startsWith('/signup')) {
     if (hasSession) {

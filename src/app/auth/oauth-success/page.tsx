@@ -10,6 +10,9 @@ export default function OAuthSuccessPage() {
     useEffect(() => {
         const handleOAuthSuccess = async () => {
             try {
+                // Small delay to ensure cookie is set
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 const result = await getCurrentUser();
                 if (result.success && result.data?.user) {
                     router.replace('/dashboard');
@@ -25,5 +28,11 @@ export default function OAuthSuccessPage() {
         handleOAuthSuccess();
     }, [router]);
 
-    return null
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-lg font-semibold">Completing authentication...</h2>
+            </div>
+        </div>
+    );
 }

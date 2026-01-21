@@ -1,3 +1,7 @@
+// Note: createUserSession and deleteCurrentSession are kept for potential
+// future server-side operations but are no longer used by API routes.
+// Authentication now happens client-side using Appwrite's native session management.
+
 import { adminAccount, sessionAccount, users } from './config';
 import { ID, OAuthProvider } from 'node-appwrite';
 
